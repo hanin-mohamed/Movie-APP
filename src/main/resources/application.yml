@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/moviesdb
+    username: movies
+    password: movies
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+
+jwt:
+  secret: VGhpc0lzQVNlY3JldEtleVdpdGhBdExlYXN0MzJiYnl0ZXMhISEhISEhISEhIQ==
+  access-exp-seconds: 900
+  refresh-exp-seconds: 2592000
+
+movies:
+  auth:
+    base-uri: "/auth"
+    login-uri: "/login"
+    refresh-token-uri: "/refresh"
+    logout-uri: "/logout"
