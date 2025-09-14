@@ -1,6 +1,8 @@
 package com.movie.movieapp.common.exception;
 
-import com.movie.movieapp.common.AppResponse;
+import com.movie.movieapp.common.exception.customException.ExternalApiException;
+import com.movie.movieapp.common.exception.customException.NotFoundException;
+import com.movie.movieapp.common.response.AppResponse;
 import org.springframework.http.*;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,4 +42,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(AppResponse.fail("Internal server error", "GEN_500"));
     }
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<AppResponse<Void>> handleExternal(ExternalApiException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(AppResponse.fail(ex.getMessage(), "EXT_502"));
+    }
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<AppResponse<Void>> handleNotFound(NotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(AppResponse.fail(ex.getMessage(), "GEN_404"));
+    }
+
+
 }

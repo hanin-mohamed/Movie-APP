@@ -1,4 +1,4 @@
-package com.movie.movieapp.common;
+package com.movie.movieapp.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -16,7 +16,7 @@ public record AppResponse<T>(
         String code
 ) {
     private static String currentPath() {
-        var attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         return attrs.getRequest().getRequestURI();
     }
 

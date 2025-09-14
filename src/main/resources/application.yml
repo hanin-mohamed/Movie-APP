@@ -17,8 +17,12 @@ spring:
 
 jwt:
   secret: VGhpc0lzQVNlY3JldEtleVdpdGhBdExlYXN0MzJiYnl0ZXMhISEhISEhISEhIQ==
-  access-exp-seconds: 900
+  access-exp-seconds: 90000
   refresh-exp-seconds: 2592000
+
+omdb:
+  api-url: https://www.omdbapi.com/
+  api-key: ${OMDB_API_KEY}
 
 movies:
   auth:
@@ -26,3 +30,10 @@ movies:
     login-uri: "/login"
     refresh-token-uri: "/refresh"
     logout-uri: "/logout"
+
+  base-uri: "/movies"
+  omdb-search-uri: "/omdb/search"
+  import-from-omdb: "/omdb/import"
+  delete-by-imdbid: "/{imdbId}"
+  get-details-by-imdbid: "/{imdbId}"
+  delete-batch: "/batch"

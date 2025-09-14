@@ -6,7 +6,7 @@ import com.movie.movieapp.auth.common.DTO.AuthResponseDTO;
 import com.movie.movieapp.auth.common.DTO.LoginRequestDTO;
 import com.movie.movieapp.auth.common.DTO.RefreshTokenRequestDTO;
 import com.movie.movieapp.auth.service.AuthService;
-import com.movie.movieapp.common.AppResponse;
+import com.movie.movieapp.common.response.AppResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
