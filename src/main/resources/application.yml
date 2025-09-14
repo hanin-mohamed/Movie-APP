@@ -37,3 +37,10 @@ movies:
   delete-by-imdbid: "/{imdbId}"
   get-details-by-imdbid: "/{imdbId}"
   delete-batch: "/batch"
+
+  rating:
+    base-uri: "/movies/rating"
+    rate-movie-uri: "/{imdbId}"
+    my-rating-uri: "/{imdbId}"
+    rating-summary-uri: "/{imdbId}/summary"
+    delete-my-rating-uri: "/{imdbId}"

@@ -4,6 +4,7 @@ import com.movie.movieapp.common.exception.customException.ExternalApiException;
 import com.movie.movieapp.common.exception.customException.NotFoundException;
 import com.movie.movieapp.common.response.AppResponse;
 import org.springframework.http.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -53,5 +54,10 @@ public class GlobalExceptionHandler {
                 .body(AppResponse.fail(ex.getMessage(), "GEN_404"));
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<AppResponse<Void>> handleDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(AppResponse.fail("Forbidden", "AUTH_403"));
+    }
 
 }
