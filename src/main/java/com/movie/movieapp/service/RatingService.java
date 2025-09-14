@@ -117,7 +117,7 @@ public class RatingService {
         if (user == null)
         {
             log.warn("User not found: {}", email);
-            throw new IllegalStateException("User not found");
+            throw new NotFoundException("User not found");
         }
         return user;
     }
