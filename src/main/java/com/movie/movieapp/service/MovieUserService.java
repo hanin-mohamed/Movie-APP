@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +28,7 @@ public class MovieUserService {
 
     private final MovieRepository movieRepository;
     private final OmdbClient omdbClient;
+    private final MovieMapper movieMapper;
 
     public OmdbSearchResponseDTO searchOmdb(String query, int page) {
         return omdbClient.search(query, page);
@@ -34,53 +36,55 @@ public class MovieUserService {
 
     @Transactional
     public List<ImportResultDTO> importByImdbIds(ImportMovieRequestDTO request) {
-
         if (request == null || request.imdbIds() == null || request.imdbIds().isEmpty()) {
             throw new IllegalArgumentException("imdbIds must not be empty");
         }
-
-        List<ImportResultDTO> results = new ArrayList<>();
+        List<ImportResultDTO> results = new ArrayList<>(request.imdbIds().size());
         Set<String> imported = new HashSet<>();
         for (String raw : request.imdbIds()) {
-            results.add(importMovie(raw, imported));
+            String id = normalizeOrNull(raw);
+            if (id == null) {
+                results.add(failed(null, "Empty imdbId"));
+                continue;
+            }
+            if (!imported.add(id)) {
+                results.add(exists(id, "Duplicated in same request"));
+                continue;
+            }
+            log.info("Movie added to database Successfully");
+            results.add(importOneMovie(id));
         }
         return results;
     }
 
-    private ImportResultDTO importMovie(String rawImdbId, Set<String> imported) {
+    private ImportResultDTO importOneMovie(String imdbId) {
 
-        String imdbId = checkRow(rawImdbId);
-
-        if (!imported.add(imdbId)) {
-            log.info("Movie with imdbId {} is duplicated in the same request, skipping", imdbId);
-            return new ImportResultDTO(imdbId, ImportStatus.EXISTS, "Duplicated in same request");
-        }
         if (movieRepository.existsByImdbId(imdbId)) {
             log.info("Movie with imdbId {} already exists, skipping", imdbId);
-            return new ImportResultDTO(imdbId, ImportStatus.EXISTS, "Already in database");
+            return exists(imdbId, "Already in database");
         }
 
         try {
             OmdbMovieDTO detail = omdbClient.getById(imdbId);
-            Movie entity = MovieMapper.toEntity(detail);
+            Movie entity = movieMapper.toEntity(detail);
             movieRepository.save(entity);
-            return new ImportResultDTO(imdbId, ImportStatus.ADDED, "Imported successfully");
+            return added(imdbId, "Imported successfully");
         } catch (ExternalApiException e) {
-            return new ImportResultDTO(imdbId, ImportStatus.FAILED, e.getMessage());
+            return failed(imdbId, e.getMessage());
         } catch (DataIntegrityViolationException e) {
-            return new ImportResultDTO(imdbId, ImportStatus.EXISTS, "Already in database");
+            return exists(imdbId, "Already in database");
         } catch (RuntimeException e) {
             log.error("Unexpected error importing movie with imdbId {}", imdbId, e);
-            return new ImportResultDTO(imdbId, ImportStatus.FAILED, "Unexpected error");
+            return failed(imdbId, "Unexpected error");
         }
     }
 
     @Transactional(readOnly = true)
-    public Page<Movie> listFromDb(String search, int page1Based, int size) {
+    public Page<Movie> getMoviesFromDB(String search, int page1Based, int size) {
         int safeSize  = Math.min(Math.max(size, 1), MAX_PAGE_SIZE);
         int zeroBased = Math.max(page1Based - 1, 0);
-
         Pageable pageable = PageRequest.of(zeroBased, safeSize, DEFAULT_SORT);
+
         if (search != null && !search.trim().isEmpty()) {
             return movieRepository.findByTitleContainingIgnoreCase(search.trim(), pageable);
         }
@@ -89,42 +93,65 @@ public class MovieUserService {
 
     @Transactional(readOnly = true)
     public MovieDTO getDetailByImdbId(String imdbId) {
-        String id = checkRow(imdbId);
+        String id = requireImdbId(imdbId);
         Movie movie = movieRepository.findByImdbId(id);
         if (movie == null) {
-            log.warn("Movie with imdbId {} not found", id);
+            log.error("Movie with imdbId {} not found", id);
             throw new NotFoundException("Movie not found");
         }
-        return MovieMapper.toDetail(movie);
+        return movieMapper.toDetail(movie);
     }
 
     @Transactional
     public void deleteMovie(String imdbId) {
-        String id = checkRow(imdbId);
+        String id = requireImdbId(imdbId);
         int deleted = movieRepository.deleteByImdbId(id);
         if (deleted == 0) {
-            log.warn("Movie with imdbId {} not found for deletion", id);
+            log.error("Movie with imdbId {} not found for deletion", id);
             throw new NotFoundException("Movie not found");
         }
     }
 
     @Transactional
     public int deleteByImdbIds(List<String> imdbIds) {
-        if (imdbIds == null || imdbIds.isEmpty())
-            return 0;
-        List<String> ids = new ArrayList<>();
-        for (String raw : imdbIds) {
-            String id = checkRow(raw);
-            ids.add(id);
-        }
+        if (imdbIds == null || imdbIds.isEmpty()) return 0;
+
+        List<String> ids = imdbIds.stream()
+                .map(this::normalizeOrNull)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (ids.isEmpty()) return 0;
         return movieRepository.deleteByImdbIdIn(ids);
     }
 
-    private String checkRow(String raw) {
-        if (raw == null || raw.trim().isEmpty()){
-            log.warn("imdbId is null or empty");
+    private String requireImdbId(String raw) {
+        if (raw == null) {
+            log.error("imdbId is null");
             throw new IllegalArgumentException("imdbId must not be empty");
         }
-        return raw.trim();
+        String v = raw.trim();
+        if (v.isEmpty()) {
+            log.error("imdbId is empty");
+            throw new IllegalArgumentException("imdbId must not be empty");
+        }
+        return v;
+    }
+
+    private String normalizeOrNull(String raw) {
+        if (raw == null) return null;
+        String rawValue = raw.trim();
+        return rawValue.isEmpty() ? null : rawValue;
+    }
+
+    private static ImportResultDTO added(String id, String message) {
+        return new ImportResultDTO(id, ImportStatus.ADDED, message);
+    }
+    private static ImportResultDTO exists(String id, String message) {
+        return new ImportResultDTO(id, ImportStatus.EXISTS, message);
+    }
+    private static ImportResultDTO failed(String id, String message) {
+        return new ImportResultDTO(id, ImportStatus.FAILED, message);
     }
 }

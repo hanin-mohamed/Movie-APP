@@ -7,6 +7,7 @@ import com.movie.movieapp.common.exception.customException.NotFoundException;
 import com.movie.movieapp.entity.Movie;
 import com.movie.movieapp.entity.MovieUser;
 import com.movie.movieapp.entity.Rating;
+import com.movie.movieapp.model.RatingMapper;
 import com.movie.movieapp.repository.MovieRepository;
 import com.movie.movieapp.repository.MovieUserRepository;
 import com.movie.movieapp.repository.RatingRepository;
@@ -25,9 +26,10 @@ public class RatingService {
     private final MovieRepository movieRepository;
     private final MovieUserRepository movieUserRepository;
     private final RatingRepository ratingRepository;
+    private final RatingMapper ratingMapper;
 
     @Transactional
-    public RatingSummaryDTO rateMovie(String imdbId, RatingRequestDTO req) {
+    public RatingSummaryDTO rateMovie(String imdbId, RatingRequestDTO request) {
         String id = checkImdbID(imdbId);
 
         Movie movie = movieRepository.findByImdbId(id);
@@ -39,13 +41,9 @@ public class RatingService {
 
         Rating rating = ratingRepository.findByUserIdAndMovieImdbId(user.getId(), id);
         if (rating == null) {
-            rating = Rating.builder()
-                    .movie(movie)
-                    .user(user)
-                    .score(req.score())
-                    .build();
+            rating = ratingMapper.fromRequest(request);
         } else {
-            rating.setScore(req.score());
+            ratingMapper.updateScore(rating,request);
         }
         ratingRepository.save(rating);
 
@@ -101,7 +99,6 @@ public class RatingService {
         long count = ratingRepository.countForMovie(id);
         return new RatingSummaryDTO(avg == null ? 0.0 : Math.round(avg * 10.0) / 10.0, count, null);
     }
-
 
     private MovieUser getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

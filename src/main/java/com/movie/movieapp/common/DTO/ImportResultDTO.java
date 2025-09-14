@@ -12,11 +12,8 @@ import lombok.Setter;
 @Setter
 @Getter
 public  class ImportResultDTO {
+    @Getter
     private final String imdbId;
     private final ImportStatus status;
     private final String message;
-
-    public String getImdbId() { return imdbId; }
-    public ImportStatus getStatus() { return status; }
-    public String getMessage() { return message; }
 }

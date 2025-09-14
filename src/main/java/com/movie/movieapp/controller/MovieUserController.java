@@ -28,6 +28,7 @@ import java.util.Map;
 public class MovieUserController {
 
     private final MovieUserService movieUserService;
+    private final MovieMapper movieMapper;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("${movies.omdb-search-uri}")
@@ -73,7 +74,7 @@ public class MovieUserController {
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String search) {
-        Page<Movie> p = movieUserService.listFromDb(search, page, size);
-        return AppResponse.ok("Movies fetched", PageResponse.of(p, MovieMapper::toSummary));
+        Page<Movie> p = movieUserService.getMoviesFromDB(search, page, size);
+        return AppResponse.ok("Movies fetched", PageResponse.of(p, movieMapper::toSummary));
     }
 }
