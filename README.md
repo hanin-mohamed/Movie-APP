@@ -162,9 +162,7 @@ Base: `/movies/rating`
 ---
 
 
-```md
-[🎥 Your popcorn and enjoy watching movie_app😉 ](https://github.com/hanin-mohamed/Movie-APP/blob/main/assets/my_movie.gif)
-```
+![🎥 Your popcorn and enjoy watching movie_app😉 ](assets/my_movie.gif)
 
 ---
 
