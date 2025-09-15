@@ -51,11 +51,12 @@ public class MovieUserService {
                 results.add(exists(id, "Duplicated in same request"));
                 continue;
             }
-            log.info("Movie added to database Successfully");
             results.add(importOneMovie(id));
+            log.info("Movie added to database Successfully");
         }
         return results;
     }
+
 
     private ImportResultDTO importOneMovie(String imdbId) {
 

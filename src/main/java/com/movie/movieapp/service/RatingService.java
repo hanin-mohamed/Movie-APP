@@ -42,6 +42,8 @@ public class RatingService {
         Rating rating = ratingRepository.findByUserIdAndMovieImdbId(user.getId(), id);
         if (rating == null) {
             rating = ratingMapper.fromRequest(request);
+            rating.setUser(user);
+            rating.setMovie(movie);
         } else {
             ratingMapper.updateScore(rating,request);
         }
