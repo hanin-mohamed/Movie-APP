@@ -72,7 +72,7 @@ public class MovieUserController {
     @Operation(summary = "User: list movies from DB with search & pagination")
     public AppResponse<PageResponse<MovieSummaryDTO>> getMovies(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @RequestParam(defaultValue = "15") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String search) {
         Page<Movie> p = movieUserService.getMoviesFromDB(search, page, size);
         return AppResponse.ok("Movies fetched", PageResponse.of(p, movieMapper::toSummary));

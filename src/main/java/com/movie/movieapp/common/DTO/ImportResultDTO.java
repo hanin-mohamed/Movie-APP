@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @Getter
 public  class ImportResultDTO {
-    @Getter
+
     private final String imdbId;
     private final ImportStatus status;
     private final String message;
