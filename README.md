@@ -154,6 +154,11 @@ Base: `/movies/rating`
 
 ---
 
+## Testing
+- Unit tests use JUnit 5 + Mockito.
+- Run all tests:
+  mvn test
+
 ##  Swagger / OpenAPI
 
 - Swagger UI: `http://localhost:8080/swagger-ui.html`  
